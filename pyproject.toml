@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "ralph-asm"
+version = "0.1.0"
+description = ""
+authors = ["ross-weir <29697678+ross-weir@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "ralph_asm"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+scalecodec = "^1.2.2"
+numpy = "^1.24.3"
+
+
+[tool.poetry.group.dev.dependencies]
+python-lsp-server = "^1.7.2"
+black = "^23.3.0"
+pytest = "^7.3.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

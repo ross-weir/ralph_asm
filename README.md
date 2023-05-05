@@ -1,0 +1,116 @@
+## Ralph disassembler
+
+WIP-just-for-fun disassembler for Ralph bytecode used by the Alephium network.
+
+Throw-away project to get hands on with the VM instruction set and compiler.
+
+Code is very rushed/rough and missing some instructions.
+
+### Example
+
+Original code:
+
+```
+  @using(updateFields = true)
+  pub fn setAddress(chainId: U256, address: ByteVec) -> () {
+    checkCaller!(callerContractId!() == parentId, ErrorCodes.InvalidCaller)
+    let newAddress = u256To2Byte!(chainId) ++ u256To1Byte!(size!(address)) ++ address
+    let length = size!(addresses)
+    let mut index = 0
+    while (index < length) {
+      let id = u256From2Byte!(byteVecSlice!(addresses, index, index + 2))
+      let addrLength = u256From1Byte!(byteVecSlice!(addresses, index + 2, index + 3))
+      let nextAddrIndex = index + 3 + addrLength
+      if (id == chainId) {
+        addresses = byteVecSlice!(addresses, 0, index)
+          ++ newAddress
+          ++ byteVecSlice!(addresses, nextAddrIndex, length)
+        return
+      }
+      index = nextAddrIndex
+    }
+    addresses = addresses ++ newAddress
+  }
+```
+
+Bytecode:
+
+```
+0203407640cd40dc01000208004047b3ce00410c7b16006716014366441601441702a0004317030c170416041603314c402ca000160416040e2a626d1705a00016040e2a16040f2a626c170616040f2a16062a1707160516002f4c0da0000c160462160244a000160716036244a10002160717044a7fd0a000160244a10001000106014034a0004317010c170216021601314c4026a000160216020e2a626d1703a00016020e2a16020f2a626c170416020f2a16042a1705160316002f4c07a00016020f2a16056202160517024a7fd60d047c7b18010201010007b3ce00410c7b1600b0
+```
+
+Produced disassembly:
+
+```
+0000: CALLERCONTRACTID
+0001: LOADIMMFIELD, 0
+0003: BYTEVECEQ
+0004: U256CONST0
+0005: ASSERTWITHERRORCODE
+0006: LOADLOCAL, 0
+0008: U256TO2BYTE
+0009: LOADLOCAL, 1
+000b: BYTEVECSIZE
+000c: U256TO1BYTE
+000d: BYTEVECCONCAT
+000e: LOADLOCAL, 1
+0010: BYTEVECCONCAT
+0011: STORELOCAL, 2
+0013: LOADMUTFIELD, 0
+0015: BYTEVECSIZE
+0016: STORELOCAL, 3
+0018: U256CONST0
+0019: STORELOCAL, 4
+001b: LOADLOCAL, 4
+001d: LOADLOCAL, 3
+001f: U256LT
+0020: IFFALSE, 44
+0023: LOADMUTFIELD, 0
+0025: LOADLOCAL, 4
+0027: LOADLOCAL, 4
+0029: U256CONST2
+002a: U256ADD
+002b: BYTEVECSLICE
+002c: U256FROM2BYTE
+002d: STORELOCAL, 5
+002f: LOADMUTFIELD, 0
+0031: LOADLOCAL, 4
+0033: U256CONST2
+0034: U256ADD
+0035: LOADLOCAL, 4
+0037: U256CONST3
+0038: U256ADD
+0039: BYTEVECSLICE
+003a: U256FROM1BYTE
+003b: STORELOCAL, 6
+003d: LOADLOCAL, 4
+003f: U256CONST3
+0040: U256ADD
+0041: LOADLOCAL, 6
+0043: U256ADD
+0044: STORELOCAL, 7
+0046: LOADLOCAL, 5
+0048: LOADLOCAL, 0
+004a: U256EQ
+004b: IFFALSE, 13
+004d: LOADMUTFIELD, 0
+004f: U256CONST0
+0050: LOADLOCAL, 4
+0052: BYTEVECSLICE
+0053: LOADLOCAL, 2
+0055: BYTEVECCONCAT
+0056: LOADMUTFIELD, 0
+0058: LOADLOCAL, 7
+005a: LOADLOCAL, 3
+005c: BYTEVECSLICE
+005d: BYTEVECCONCAT
+005e: STOREMUTFIELD, 0
+0060: RETURN
+0061: LOADLOCAL, 7
+0063: STORELOCAL, 4
+0065: JUMP, -48
+0068: LOADMUTFIELD, 0
+006a: LOADLOCAL, 2
+006c: BYTEVECCONCAT
+006d: STOREMUTFIELD, 0
+```
